@@ -37,13 +37,18 @@ jobs:
         shell: pwsh
         continue-on-error: true
         run: |
-          New-Item -ItemType Directory -Force test-out | Out-Null
+          New-Item -ItemType Directory -Force test-out, test-src | Out-Null
+          # Make a 6-second clip with picture + sound and serve it locally, so the test never depends on outside sites.
+          build\bin\ffmpeg.exe -hide_banner -loglevel error -f lavfi -i testsrc2=size=1280x720:rate=30 -f lavfi -i sine=frequency=440 -t 6 -c:v libx264 -pix_fmt yuv420p -c:a aac test-src\sample.mp4
+          $srv = Start-Process python -ArgumentList '-m','http.server','8765','--directory','test-src' -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 3
           $p = Start-Process dist\Glide.exe -PassThru -Wait -ArgumentList @(
             '--selftest', "$PWD\test-out\report.json", "$PWD\test-out",
             'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4')
+            'http://127.0.0.1:8765/sample.mp4')
           Get-Content test-out\report.json
           Get-ChildItem test-out | Format-Table Name, Length
+          Stop-Process -Id $srv.Id -Force
           exit $p.ExitCode
       - name: Launch app and screenshot
         shell: pwsh
