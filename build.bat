@@ -1,9 +1,9 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title Building Glide.exe
+title Building CheeseMax.exe
 echo.
-echo   ==  Building Glide.exe  ==
+echo   ==  Building CheeseMax.exe  ==
 echo.
 
 rem ---- 1. Find Python -------------------------------------------------------
@@ -41,15 +41,15 @@ if not exist build\bin\deno.exe (
 rem ---- 4. Package -----------------------------------------------------------
 echo [4/4] Packaging with PyInstaller (this takes a minute)...
 ".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean --onefile --windowed ^
-  --name Glide --icon glide.ico ^
+  --name CheeseMax --icon icon.ico ^
   --add-data "ui.html;." --add-data "build\bin\*;bin" ^
   --collect-all webview --collect-all yt_dlp_ejs ^
   app.py || goto :fail
 
 echo.
-echo   Done!  Your app is at:  %cd%\dist\Glide.exe
+echo   Done!  Your app is at:  %cd%\dist\CheeseMax.exe
 echo.
-if not defined CI explorer /select,"%cd%\dist\Glide.exe"
+if not defined CI explorer /select,"%cd%\dist\CheeseMax.exe"
 goto :end
 
 :fail

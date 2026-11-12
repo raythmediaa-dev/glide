@@ -1,6 +1,6 @@
-# Glide: a dark-mode yt-dlp app for Windows
+# Cheese Max: a dark-mode yt-dlp app for Windows
 
-A sleek desktop front end for [yt-dlp](https://github.com/yt-dlp/yt-dlp), packaged as a single `Glide.exe`.
+A sleek desktop front end for [yt-dlp](https://github.com/yt-dlp/yt-dlp), packaged as a single `CheeseMax.exe`.
 
 - Paste a link to see a preview (thumbnail, title, channel, length)
 - Presets: Best (MP4), 1080p, 720p, MP3, M4A
@@ -8,13 +8,13 @@ A sleek desktop front end for [yt-dlp](https://github.com/yt-dlp/yt-dlp), packag
 - Download list with live progress, speed, time left, cancel, retry and "Show in Explorer"
 - Dark title bar on Windows 10/11
 - ffmpeg and deno are bundled inside the exe, so there's nothing else to install
-- Remembers your folder and options (`%APPDATA%\Glide\settings.json`)
+- Remembers your folder and options (`%APPDATA%\Cheese Max\settings.json`)
 
 ## Build the .exe on Windows
 
 1. Double-click **`build.bat`**.
    - If Python isn't installed, the script installs it with winget. Run `build.bat` again afterwards.
-2. When it finishes, Explorer opens on **`dist\Glide.exe`**. Copy that file anywhere you like.
+2. When it finishes, Explorer opens on **`dist\CheeseMax.exe`**. Copy that file anywhere you like.
 
 The first build downloads about 150 MB (Python packages, ffmpeg, deno) and takes a few minutes.
 
@@ -22,7 +22,7 @@ The first build downloads about 150 MB (Python packages, ffmpeg, deno) and takes
 
 Push this folder to a GitHub repository. The included workflow (`.github/workflows/build-windows.yml`)
 builds the exe on a Windows runner. To get the file, open the **Actions** tab, click the latest run,
-and download **Glide-windows**.
+and download **CheeseMax-windows**.
 
 ## Notes
 

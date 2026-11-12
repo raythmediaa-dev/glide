@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Glide — a sleek, dark-mode desktop GUI for yt-dlp.
+"""Cheese Max — a sleek, dark-mode desktop GUI for yt-dlp.
 
 Run:  python3 app.py
 Needs: pip install -r requirements.txt   (and ffmpeg on PATH, or bundled in bin/ by build.bat)
@@ -16,7 +16,7 @@ from pathlib import Path
 import webview
 import yt_dlp
 
-APP_NAME = "Glide"
+APP_NAME = "Cheese Max"
 IS_WIN = sys.platform == "win32"
 FROZEN = getattr(sys, "frozen", False)
 # Bundled resources live in _MEIPASS when packaged by PyInstaller.
@@ -25,7 +25,7 @@ HERE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
 if IS_WIN:
     SETTINGS_FILE = Path(os.environ.get("APPDATA", Path.home())) / APP_NAME / "settings.json"
 else:
-    SETTINGS_FILE = Path.home() / ".glide-ytdlp.json"
+    SETTINGS_FILE = Path.home() / ".cheese-max.json"
 
 # Put bundled tools (ffmpeg.exe, ffprobe.exe, deno.exe) on PATH so yt-dlp finds them.
 _BIN = HERE / "bin"
@@ -290,7 +290,7 @@ def main():
     api.window = window
     if IS_WIN:
         window.events.shown += lambda: _dark_titlebar(window)
-    webview.start(debug=os.environ.get("GLIDE_DEBUG") == "1", private_mode=False)
+    webview.start(debug=os.environ.get("CHEESEMAX_DEBUG") == "1", private_mode=False)
 
 
 if __name__ == "__main__":

@@ -19,8 +19,8 @@ jobs:
         run: build.bat
       - uses: actions/upload-artifact@v4
         with:
-          name: Glide-windows
-          path: dist/Glide.exe
+          name: CheeseMax-windows
+          path: dist/CheeseMax.exe
 
       - name: Publish to Releases
         if: github.ref == 'refs/heads/main'
@@ -28,9 +28,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $notes = "Latest build of Glide for Windows (commit ${{ github.sha }}). Download Glide.exe below and double-click it."
+          $notes = "Latest build of Cheese Max for Windows (commit ${{ github.sha }}). Download CheeseMax.exe below and double-click it."
           gh release delete latest --yes --cleanup-tag 2>$null
-          gh release create latest dist/Glide.exe --title "Glide for Windows (latest)" --notes $notes --target ${{ github.sha }}
+          gh release create latest dist/CheeseMax.exe --title "Cheese Max for Windows (latest)" --notes $notes --target ${{ github.sha }}
 
       # ---- Smoke tests on the packaged exe ----
       - name: Self-test real downloads
@@ -42,7 +42,7 @@ jobs:
           build\bin\ffmpeg.exe -hide_banner -loglevel error -f lavfi -i testsrc2=size=1280x720:rate=30 -f lavfi -i sine=frequency=440 -t 6 -c:v libx264 -pix_fmt yuv420p -c:a aac test-src\sample.mp4
           $srv = Start-Process python -ArgumentList '-m','http.server','8765','--directory','test-src' -PassThru -WindowStyle Hidden
           Start-Sleep -Seconds 3
-          $p = Start-Process dist\Glide.exe -PassThru -Wait -ArgumentList @(
+          $p = Start-Process dist\CheeseMax.exe -PassThru -Wait -ArgumentList @(
             '--selftest', "$PWD\test-out\report.json", "$PWD\test-out",
             'https://www.youtube.com/watch?v=jNQXAC9IVRw',
             'http://127.0.0.1:8765/sample.mp4')
@@ -54,7 +54,7 @@ jobs:
         shell: pwsh
         continue-on-error: true
         run: |
-          $app = Start-Process dist\Glide.exe -PassThru
+          $app = Start-Process dist\CheeseMax.exe -PassThru
           Start-Sleep -Seconds 40
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
           $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
@@ -63,7 +63,7 @@ jobs:
           $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
           $bmp.Save("$PWD\test-out\screenshot.png")
           Get-Process | Where-Object { $_.MainWindowTitle } | Format-Table ProcessName, MainWindowTitle
-          if ($app.HasExited) { Write-Error "Glide exited early with code $($app.ExitCode)" } else { Stop-Process -Id $app.Id -Force }
+          if ($app.HasExited) { Write-Error "Cheese Max exited early with code $($app.ExitCode)" } else { Stop-Process -Id $app.Id -Force }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
