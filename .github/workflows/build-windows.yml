@@ -1,0 +1,21 @@
+name: Build Windows exe
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        shell: cmd
+        env:
+          CI: "1"
+        run: build.bat
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Glide-windows
+          path: dist/Glide.exe

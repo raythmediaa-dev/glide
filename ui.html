@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glide</title>
+<style>
+  :root {
+    --bg: #141416;
+    --bg-glow-1: rgba(10, 132, 255, 0.16);
+    --bg-glow-2: rgba(191, 90, 242, 0.13);
+    --panel: rgba(255, 255, 255, 0.045);
+    --panel-hi: rgba(255, 255, 255, 0.075);
+    --stroke: rgba(255, 255, 255, 0.08);
+    --stroke-hi: rgba(255, 255, 255, 0.14);
+    --text: #f5f5f7;
+    --text-2: rgba(235, 235, 245, 0.62);
+    --text-3: rgba(235, 235, 245, 0.36);
+    --blue: #0a84ff;
+    --purple: #bf5af2;
+    --green: #30d158;
+    --red: #ff453a;
+    --orange: #ff9f0a;
+    --grad: linear-gradient(135deg, #0a84ff 0%, #5e5ce6 50%, #bf5af2 100%);
+    --radius: 14px;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "Inter", system-ui, sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(900px 500px at 0% -10%, var(--bg-glow-1), transparent 60%),
+      radial-gradient(700px 500px at 110% 10%, var(--bg-glow-2), transparent 60%),
+      var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none; user-select: none;
+    overflow: hidden;
+  }
+  .app { height: 100%; display: flex; flex-direction: column; padding: 22px 26px 0; gap: 18px; }
+
+  /* ---------- header ---------- */
+  header { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 38px; height: 38px; border-radius: 10px; background: var(--grad);
+    display: grid; place-items: center;
+    box-shadow: 0 6px 20px rgba(94, 92, 230, .45), inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  .logo svg { width: 20px; height: 20px; }
+  .brand h1 { font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+  .brand p { font-size: 11.5px; color: var(--text-3); }
+  .spacer { flex: 1; }
+  .chip-btn {
+    display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px;
+    border-radius: 9px; border: 1px solid var(--stroke); background: var(--panel);
+    color: var(--text-2); font: inherit; cursor: default; transition: all .2s var(--ease);
+    max-width: 260px;
+  }
+  .chip-btn:hover { background: var(--panel-hi); color: var(--text); border-color: var(--stroke-hi); }
+  .chip-btn svg { width: 15px; height: 15px; flex: none; opacity: .85; }
+  .chip-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---------- composer ---------- */
+  .composer {
+    background: var(--panel); border: 1px solid var(--stroke); border-radius: 18px;
+    padding: 14px; display: flex; flex-direction: column; gap: 14px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+  }
+  .url-row { display: flex; gap: 10px; }
+  .field {
+    flex: 1; display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 8px 0 14px;
+    background: rgba(0,0,0,.28); border: 1px solid var(--stroke); border-radius: 12px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field:focus-within { border-color: rgba(10,132,255,.7); box-shadow: 0 0 0 4px rgba(10,132,255,.18); }
+  .field > svg { width: 17px; height: 17px; color: var(--text-3); flex: none; }
+  .field input {
+    flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--text);
+    font: inherit; font-size: 14px; -webkit-user-select: text; user-select: text;
+  }
+  .field input::placeholder { color: var(--text-3); }
+  .ghost {
+    height: 30px; padding: 0 10px; border-radius: 8px; border: 0; background: rgba(255,255,255,.07);
+    color: var(--text-2); font: inherit; font-size: 12px; font-weight: 500; transition: all .15s;
+  }
+  .ghost:hover { background: rgba(255,255,255,.12); color: var(--text); }
+  .primary {
+    height: 46px; padding: 0 22px; border: 0; border-radius: 12px; color: #fff;
+    font: inherit; font-size: 14px; font-weight: 600; background: var(--grad); background-size: 150% 150%;
+    display: flex; align-items: center; gap: 8px; position: relative;
+    box-shadow: 0 8px 24px rgba(94,92,230,.4), inset 0 1px 0 rgba(255,255,255,.3);
+    transition: transform .15s var(--ease), box-shadow .2s, filter .2s, background-position .4s;
+  }
+  .primary:hover { background-position: 100% 0; filter: brightness(1.08); }
+  .primary:active { transform: scale(.97); }
+  .primary:disabled { filter: grayscale(.7) brightness(.7); box-shadow: none; }
+  .primary svg { width: 16px; height: 16px; }
+
+  .options { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .segmented {
+    position: relative; display: inline-flex; padding: 3px; border-radius: 10px;
+    background: rgba(0,0,0,.3); border: 1px solid var(--stroke);
+  }
+  .segmented button {
+    position: relative; z-index: 1; height: 28px; padding: 0 14px; border: 0; background: none;
+    color: var(--text-2); font: inherit; font-size: 12.5px; font-weight: 500; border-radius: 7px;
+    transition: color .2s;
+  }
+  .segmented button.active { color: var(--text); }
+  .segmented .thumb {
+    position: absolute; top: 3px; bottom: 3px; border-radius: 7px; background: rgba(255,255,255,.13);
+    box-shadow: 0 2px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
+    transition: left .28s var(--ease), width .28s var(--ease);
+  }
+  .seg-sep { width: 1px; height: 16px; background: var(--stroke-hi); margin: 0 4px; align-self: center; }
+  .toggle { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 12.5px; }
+  .switch {
+    width: 32px; height: 19px; border-radius: 99px; background: rgba(255,255,255,.14); position: relative;
+    transition: background .25s var(--ease); flex: none;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.4); transition: transform .25s var(--ease);
+  }
+  .toggle.on .switch { background: var(--green); }
+  .toggle.on .switch::after { transform: translateX(13px); }
+
+  /* ---------- preview ---------- */
+  .preview {
+    overflow: hidden; max-height: 0; opacity: 0;
+    transition: max-height .35s var(--ease), opacity .3s, margin .3s; margin-top: -14px;
+  }
+  .preview.show { max-height: 120px; opacity: 1; margin-top: 0; }
+  .preview-inner { display: flex; gap: 14px; align-items: center; padding: 2px; }
+  .preview .thumb-lg {
+    width: 128px; aspect-ratio: 16/9; border-radius: 9px; background: #222 center/cover; flex: none;
+    box-shadow: 0 6px 18px rgba(0,0,0,.4); border: 1px solid var(--stroke);
+  }
+  .preview .meta { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .preview .title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .preview .sub { color: var(--text-2); font-size: 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .pill {
+    font-size: 10.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 5px; background: rgba(10,132,255,.18); color: #64b0ff;
+  }
+  .preview.loading .thumb-lg, .preview.loading .title, .preview.loading .sub {
+    background: linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.12), rgba(255,255,255,.05));
+    background-size: 200% 100%; animation: shimmer 1.2s infinite linear; color: transparent; border-radius: 6px;
+  }
+  .preview.loading .title { width: 280px; height: 16px; }
+  .preview.loading .sub { width: 160px; height: 12px; }
+  .preview.error .title { color: var(--red); white-space: normal; font-weight: 500; font-size: 12.5px; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  /* ---------- downloads ---------- */
+  .list-head { display: flex; align-items: center; gap: 8px; padding: 0 4px; }
+  .list-head h2 { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
+  .badge { font-size: 11px; color: var(--text-2); background: var(--panel-hi); padding: 1px 7px; border-radius: 99px; }
+  .link { background: none; border: 0; color: var(--text-3); font: inherit; font-size: 12px; transition: color .15s; }
+  .link:hover { color: var(--blue); }
+
+  .list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 0 2px 22px; margin: 0 -2px; }
+  .list::-webkit-scrollbar { width: 8px; }
+  .list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+
+  .job {
+    display: grid; grid-template-columns: 88px 1fr auto; gap: 14px; align-items: center;
+    padding: 10px 12px 10px 10px; border-radius: var(--radius); background: var(--panel);
+    border: 1px solid var(--stroke); transition: background .2s, border-color .2s;
+    animation: rise .45s var(--ease) both;
+  }
+  .job:hover { background: var(--panel-hi); border-color: var(--stroke-hi); }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+  .job .thumb-sm {
+    width: 88px; aspect-ratio: 16/9; border-radius: 8px; background: #26262a center/cover;
+    position: relative; overflow: hidden; border: 1px solid var(--stroke);
+  }
+  .job .thumb-sm .kind {
+    position: absolute; right: 4px; bottom: 4px; font-size: 9.5px; font-weight: 700; letter-spacing: .04em;
+    padding: 1px 5px; border-radius: 4px; background: rgba(0,0,0,.7); color: #fff;
+    backdrop-filter: blur(6px);
+  }
+  .job .body { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+  .job .name { font-size: 13px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .job .status { font-size: 11.5px; color: var(--text-2); display: flex; gap: 10px; font-variant-numeric: tabular-nums; }
+  .job .status .st { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+  .job.done .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .job.error .dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .job.cancelled .dot { background: var(--text-3); box-shadow: none; }
+  .job.error .status { color: var(--red); }
+  .job.error .status .err { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .bar { height: 5px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; position: relative; }
+  .bar i {
+    position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: var(--grad);
+    transition: width .35s var(--ease); box-shadow: 0 0 12px rgba(94,92,230,.6);
+  }
+  .bar i::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+    background-size: 60% 100%; background-repeat: no-repeat; animation: sweep 1.6s infinite;
+  }
+  .job.indeterminate .bar i { width: 35% !important; animation: indet 1.3s infinite var(--ease); }
+  .job.done .bar i { background: var(--green); box-shadow: 0 0 10px rgba(48,209,88,.5); }
+  .job.done .bar i::after, .job.error .bar i::after, .job.cancelled .bar i::after { display: none; }
+  .job.error .bar i { background: var(--red); box-shadow: none; }
+  .job.cancelled .bar i { background: var(--text-3); box-shadow: none; }
+  @keyframes sweep { from { background-position: -150% 0; } to { background-position: 250% 0; } }
+  @keyframes indet { from { left: -35%; } to { left: 100%; } }
+
+  .actions { display: flex; gap: 6px; min-width: 66px; justify-content: flex-end; }
+  .icon-btn {
+    width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(255,255,255,.06);
+    color: var(--text-2); display: grid; place-items: center; transition: all .15s;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,.13); color: var(--text); }
+  .icon-btn.danger:hover { background: rgba(255,69,58,.2); color: var(--red); }
+  .icon-btn svg { width: 15px; height: 15px; }
+
+  .empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    color: var(--text-3); text-align: center; padding-bottom: 40px;
+  }
+  .empty .orb {
+    width: 84px; height: 84px; border-radius: 26px; display: grid; place-items: center; margin-bottom: 6px;
+    background: linear-gradient(145deg, rgba(10,132,255,.18), rgba(191,90,242,.14));
+    border: 1px solid var(--stroke-hi);
+    box-shadow: 0 20px 50px rgba(94,92,230,.2), inset 0 1px 0 rgba(255,255,255,.08);
+    animation: float 5s ease-in-out infinite;
+  }
+  .empty .orb svg { width: 36px; height: 36px; color: rgba(255,255,255,.8); }
+  .empty h3 { color: var(--text-2); font-size: 14px; font-weight: 600; }
+  .empty p { font-size: 12px; max-width: 280px; }
+  kbd {
+    font: 11px -apple-system, system-ui, sans-serif; padding: 1px 5px; border-radius: 4px;
+    background: rgba(255,255,255,.08); border: 1px solid var(--stroke-hi); color: var(--text-2);
+  }
+  @keyframes float { 50% { transform: translateY(-6px); } }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 20px); opacity: 0;
+    padding: 9px 16px; border-radius: 10px; background: rgba(40,40,44,.92); border: 1px solid var(--stroke-hi);
+    box-shadow: 0 10px 30px rgba(0,0,0,.5); font-size: 12.5px; pointer-events: none;
+    backdrop-filter: blur(20px); transition: all .3s var(--ease);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  button { cursor: default; }
+  @media (max-width: 700px) { .seg-sep { display: none; } .primary span { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>
+    </div>
+    <div class="brand">
+      <h1>Glide</h1>
+      <p id="version">yt-dlp</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="chip-btn" id="folderBtn" title="Change download folder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span id="folderName">Downloads</span>
+    </button>
+  </header>
+
+  <section class="composer">
+    <div class="url-row">
+      <label class="field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>
+        <input id="url" placeholder="Paste a video, playlist or channel link…" spellcheck="false" autocomplete="off">
+        <button class="ghost" id="pasteBtn">Paste</button>
+      </label>
+      <button class="primary" id="goBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span>Download</span>
+      </button>
+    </div>
+
+    <div class="options">
+      <div class="segmented" id="presets">
+        <div class="thumb"></div>
+        <button data-v="best">Best</button>
+        <button data-v="1080">1080p</button>
+        <button data-v="720">720p</button>
+        <div class="seg-sep"></div>
+        <button data-v="mp3">MP3</button>
+        <button data-v="m4a">M4A</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="toggle" data-key="subs"><div class="switch"></div>Subtitles</div>
+      <div class="toggle" data-key="playlist"><div class="switch"></div>Full playlist</div>
+    </div>
+
+    <div class="preview" id="preview">
+      <div class="preview-inner">
+        <div class="thumb-lg" id="pvThumb"></div>
+        <div class="meta">
+          <div class="title" id="pvTitle"></div>
+          <div class="sub" id="pvSub"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="list-head">
+    <h2>Downloads</h2><span class="badge" id="count">0</span>
+    <div class="spacer"></div>
+    <button class="link" id="openFolder">Open folder</button>
+    <span style="color:var(--text-3)">·</span>
+    <button class="link" id="clearBtn">Clear finished</button>
+  </div>
+
+  <div class="list" id="list">
+    <div class="empty" id="empty">
+      <div class="orb">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z" fill="currentColor"/></svg>
+      </div>
+      <h3>Nothing downloading yet</h3>
+      <p>Paste a link above and press <kbd id="enterKey">Return</kbd>. Works with YouTube and 1,800+ other sites.</p>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const state = { preset: 'best', info: null, infoUrl: null, jobs: new Map() };
+const api = () => window.pywebview.api;
+let IS_WIN = /Windows/.test(navigator.userAgent);
+
+const ICON = {
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  reveal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>',
+  retry: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+};
+
+/* ---------- utils ---------- */
+const fmtBytes = b => { if (!b) return '—'; const u = ['B','KB','MB','GB']; let i = 0; while (b >= 1024 && i < 3) { b /= 1024; i++; } return b.toFixed(i > 1 ? 1 : 0) + ' ' + u[i]; };
+const fmtTime = s => { if (s == null) return ''; s = Math.round(s); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(x).padStart(2,'0'); };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const looksLikeUrl = s => /^https?:\/\/\S+\.\S+/i.test(s.trim());
+let toastT; const toast = msg => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); };
+
+/* ---------- segmented control ---------- */
+function setPreset(v, save = true) {
+  state.preset = v;
+  const seg = $('#presets'), btn = seg.querySelector(`[data-v="${v}"]`) || seg.querySelector('button');
+  seg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+  const th = seg.querySelector('.thumb'); th.style.left = btn.offsetLeft + 'px'; th.style.width = btn.offsetWidth + 'px';
+  if (save) api().set_setting('preset', v);
+}
+$('#presets').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setPreset(b.dataset.v); });
+window.addEventListener('resize', () => setPreset(state.preset, false));
+
+document.querySelectorAll('.toggle').forEach(t => t.addEventListener('click', () => {
+  t.classList.toggle('on'); api().set_setting(t.dataset.key, t.classList.contains('on'));
+  if (t.dataset.key === 'playlist' && state.infoUrl) { state.infoUrl = null; maybeFetch(); }
+}));
+
+/* ---------- folder ---------- */
+const showFolder = p => { $('#folderName').textContent = p.split(/[\\/]/).filter(Boolean).pop() || p; $('#folderBtn').title = p; };
+$('#folderBtn').onclick = async () => { const f = await api().choose_folder(); if (f) { showFolder(f); toast('Saving to ' + f); } };
+$('#openFolder').onclick = () => api().open_folder();
+
+/* ---------- preview / fetch ---------- */
+const urlEl = $('#url'); let fetchT, fetchSeq = 0;
+async function maybeFetch() {
+  const url = urlEl.value.trim(), pv = $('#preview');
+  if (!looksLikeUrl(url)) { pv.classList.remove('show'); state.info = null; return; }
+  if (url === state.infoUrl) return;
+  state.infoUrl = url; const seq = ++fetchSeq;
+  pv.className = 'preview show loading'; $('#pvThumb').style.backgroundImage = '';
+  const info = await api().fetch_info(url);
+  if (seq !== fetchSeq) return;
+  pv.classList.remove('loading');
+  if (info.error) { state.info = null; pv.classList.add('error'); $('#pvTitle').textContent = info.error; $('#pvSub').textContent = ''; return; }
+  state.info = info;
+  $('#pvThumb').style.backgroundImage = info.thumbnail ? `url("${info.thumbnail}")` : '';
+  $('#pvTitle').textContent = info.title;
+  const bits = [];
+  if (info.site) bits.push(`<span class="pill">${esc(info.site)}</span>`);
+  if (info.uploader) bits.push(esc(info.uploader));
+  if (info.count != null) bits.push(info.count + ' videos');
+  else if (info.duration) bits.push(fmtTime(info.duration));
+  $('#pvSub').innerHTML = bits.join('<span style="opacity:.4">•</span>');
+}
+urlEl.addEventListener('input', () => { clearTimeout(fetchT); fetchT = setTimeout(maybeFetch, 450); });
+urlEl.addEventListener('keydown', e => { if (e.key === 'Enter') start(); });
+$('#pasteBtn').onclick = async e => {
+  e.preventDefault();
+  try { urlEl.value = (await navigator.clipboard.readText()).trim(); maybeFetch(); }
+  catch { urlEl.focus(); toast(IS_WIN ? 'Press Ctrl+V to paste' : 'Press ⌘V to paste'); }
+};
+
+/* ---------- jobs ---------- */
+const LABELS = { best: 'MP4', '1080': '1080p', '720': '720p', mp3: 'MP3', m4a: 'M4A' };
+async function start() {
+  const url = urlEl.value.trim();
+  if (!looksLikeUrl(url)) { urlEl.focus(); toast('Paste a valid link first'); return; }
+  const info = state.infoUrl === url && state.info ? state.info : { title: url };
+  const preset = state.preset;
+  const id = await api().download(url, preset);
+  addJob(id, url, preset, info);
+  urlEl.value = ''; state.info = null; state.infoUrl = null; $('#preview').classList.remove('show');
+}
+$('#goBtn').onclick = start;
+
+function addJob(id, url, preset, info) {
+  $('#empty').style.display = 'none';
+  const el = document.createElement('div');
+  el.className = 'job indeterminate'; el.dataset.id = id;
+  el.innerHTML = `
+    <div class="thumb-sm" style="${info.thumbnail ? `background-image:url('${esc(info.thumbnail)}')` : ''}"><span class="kind">${LABELS[preset]}</span></div>
+    <div class="body">
+      <div class="name" title="${esc(info.title)}">${esc(info.title)}</div>
+      <div class="bar"><i></i></div>
+      <div class="status"><span class="st"><span class="dot"></span><span class="label">Starting…</span></span><span class="meta"></span></div>
+    </div>
+    <div class="actions"><button class="icon-btn danger" data-act="cancel" title="Cancel">${ICON.x}</button></div>`;
+  $('#list').prepend(el);
+  state.jobs.set(id, { el, url, preset, info, status: 'active' });
+  updateCount();
+}
+
+function setActions(job, html) { $('.actions', job.el).innerHTML = html; }
+$('#list').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const el = b.closest('.job'), job = state.jobs.get(el.dataset.id);
+  if (b.dataset.act === 'cancel') { api().cancel(el.dataset.id); $('.label', el).textContent = 'Cancelling…'; }
+  if (b.dataset.act === 'reveal') api().reveal(job.path);
+  if (b.dataset.act === 'remove') { el.remove(); state.jobs.delete(el.dataset.id); updateCount(); }
+  if (b.dataset.act === 'retry') {
+    el.remove(); state.jobs.delete(el.dataset.id);
+    api().download(job.url, job.preset).then(id => addJob(id, job.url, job.preset, job.info));
+  }
+});
+$('#clearBtn').onclick = () => {
+  for (const [id, j] of state.jobs) if (j.status !== 'active') { j.el.remove(); state.jobs.delete(id); }
+  updateCount();
+};
+function updateCount() {
+  const active = [...state.jobs.values()].filter(j => j.status === 'active').length;
+  $('#count').textContent = active ? `${active} active` : state.jobs.size;
+  $('#empty').style.display = state.jobs.size ? 'none' : '';
+}
+
+/* ---------- backend events ---------- */
+window.onBackend = (event, d) => {
+  const job = state.jobs.get(d.id); if (!job) return;
+  const el = job.el, label = $('.label', el), meta = $('.meta', el), bar = $('.bar i', el);
+  if (event === 'progress') {
+    if (d.percent != null) { el.classList.remove('indeterminate'); bar.style.width = d.percent.toFixed(1) + '%'; }
+    label.textContent = d.percent != null ? `${d.percent.toFixed(0)}%` : 'Downloading…';
+    const parts = [];
+    if (d.playlist_index) parts.push(`#${d.playlist_index}`);
+    if (d.total) parts.push(`${fmtBytes(d.downloaded)} of ${fmtBytes(d.total)}`);
+    if (d.speed) parts.push(fmtBytes(d.speed) + '/s');
+    if (d.eta != null) parts.push(fmtTime(d.eta) + ' left');
+    meta.textContent = parts.join('  ·  ');
+  } else if (event === 'stage') {
+    el.classList.add('indeterminate'); label.textContent = d.stage; meta.textContent = '';
+  } else if (event === 'done') {
+    job.status = 'done'; job.path = d.path;
+    el.className = 'job done'; bar.style.width = '100%'; label.textContent = 'Completed'; meta.textContent = '';
+    setActions(job, `<button class="icon-btn" data-act="reveal" title="${IS_WIN ? 'Show in Explorer' : 'Show in Finder'}">${ICON.reveal}</button><button class="icon-btn" data-act="remove" title="Remove">${ICON.x}</button>`);
+    toast('✓ ' + (job.info.title || 'Download complete'));
+  } else if (event === 'error' || event === 'cancelled') {
+    job.status = event; el.className = 'job ' + event;
+    label.innerHTML = event === 'error' ? `<span class="err" title="${esc(d.message)}">${esc(d.message)}</span>` : 'Cancelled';
+    meta.textContent = '';
+    setActions(job, `<button class="icon-btn" data-act="retry" title="Retry">${ICON.retry}</button><button class="icon-btn" data-act="remove" title="Remove">${ICON.x}</button>`);
+  }
+  updateCount();
+};
+
+/* ---------- boot ---------- */
+window.addEventListener('pywebviewready', async () => {
+  const s = await api().get_settings();
+  IS_WIN = s.platform === 'win32';
+  if (IS_WIN) $('#enterKey').textContent = 'Enter';
+  $('#version').textContent = 'yt-dlp ' + s.version;
+  showFolder(s.folder);
+  setPreset(s.preset || 'best', false);
+  document.querySelectorAll('.toggle').forEach(t => t.classList.toggle('on', !!s[t.dataset.key]));
+  urlEl.focus();
+});
+requestAnimationFrame(() => setPreset('best', false));
+</script>
+</body>
+</html>
