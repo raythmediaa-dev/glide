@@ -228,7 +228,37 @@ def _dark_titlebar(window):
         pass
 
 
+def selftest(out_file, folder, urls):
+    """Headless check used by CI: download each URL as 720p video and as MP3, write a JSON report."""
+    events, results = [], []
+
+    class FakeWindow:
+        def evaluate_js(self, js):
+            events.append(js)
+
+    api = Api()
+    api.window = FakeWindow()
+    api.settings.update({"folder": folder, "subs": False, "playlist": False})
+    for url in urls:
+        for preset in ("720", "mp3"):
+            events.clear()
+            api._run("t", url, preset)
+            last = events[-1] if events else ""
+            ok = '"done"' in last
+            path = None
+            if ok:
+                path = json.loads(last[last.index(", ") + 2:-1]).get("path")
+            results.append({"url": url, "preset": preset, "ok": ok and bool(path) and os.path.exists(path),
+                            "path": path, "size": os.path.getsize(path) if path and os.path.exists(path) else 0,
+                            "progress_events": sum('"progress"' in e for e in events), "last_event": last[:400]})
+    report = {"yt_dlp": yt_dlp.version.__version__, "results": results}
+    Path(out_file).write_text(json.dumps(report, indent=2))
+    sys.exit(0 if any(r["ok"] for r in results) else 1)
+
+
 def main():
+    if len(sys.argv) > 3 and sys.argv[1] == "--selftest":
+        return selftest(sys.argv[2], sys.argv[3], sys.argv[4:])
     api = Api()
     kwargs = dict(width=880, height=680, min_size=(640, 520), background_color="#141416", js_api=api)
     if sys.platform == "darwin":
