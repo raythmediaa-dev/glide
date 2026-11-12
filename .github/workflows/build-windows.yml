@@ -54,6 +54,7 @@ jobs:
         shell: pwsh
         continue-on-error: true
         run: |
+          $env:CHEESEMAX_DIAG = "$PWD\test-out\diag.txt"
           $app = Start-Process dist\CheeseMax.exe -PassThru
           Start-Sleep -Seconds 40
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
@@ -61,8 +62,16 @@ jobs:
           $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
           $g = [System.Drawing.Graphics]::FromImage($bmp)
           $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("$PWD\test-out\screenshot-40s.png")
+          Start-Sleep -Seconds 50
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          $g = [System.Drawing.Graphics]::FromImage($bmp)
+          $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
           $bmp.Save("$PWD\test-out\screenshot.png")
           Get-Process | Where-Object { $_.MainWindowTitle } | Format-Table ProcessName, MainWindowTitle
+          if (Test-Path test-out\diag.txt) { Get-Content test-out\diag.txt }
           if ($app.HasExited) { Write-Error "Cheese Max exited early with code $($app.ExitCode)" } else { Stop-Process -Id $app.Id -Force }
       - uses: actions/upload-artifact@v4
         if: always()
@@ -71,3 +80,5 @@ jobs:
           path: |
             test-out/report.json
             test-out/screenshot.png
+            test-out/screenshot-40s.png
+            test-out/diag.txt

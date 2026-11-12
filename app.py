@@ -279,6 +279,34 @@ def selftest(out_file, folder, urls):
     sys.exit(0 if any(r["ok"] for r in results) else 1)
 
 
+def _start_diagnostics(window, path):
+    """CI helper: log window events and page/bridge state to a file over time."""
+    import time
+    t0 = time.time()
+
+    def log(msg):
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(f"{time.time() - t0:6.1f}s  {msg}\n")
+
+    window.events.shown += lambda: log("event: shown")
+    window.events.loaded += lambda: log("event: loaded")
+
+    def poll():
+        for _ in range(24):
+            time.sleep(5)
+            try:
+                state = window.evaluate_js(
+                    "JSON.stringify({ready: document.readyState, bridge: typeof window.pywebview,"
+                    " api: !!(window.pywebview && window.pywebview.api && window.pywebview.api.get_settings),"
+                    " version: document.getElementById('version').textContent})")
+                log(f"state: {state}")
+            except Exception as e:
+                log(f"evaluate_js failed: {e!r}")
+
+    threading.Thread(target=poll, daemon=True).start()
+    log(f"starting; webview {getattr(webview, '__version__', '?')}, yt-dlp {yt_dlp.version.__version__}")
+
+
 def main():
     if len(sys.argv) > 3 and sys.argv[1] == "--selftest":
         return selftest(sys.argv[2], sys.argv[3], sys.argv[4:])
@@ -290,6 +318,9 @@ def main():
     api.window = window
     if IS_WIN:
         window.events.shown += lambda: _dark_titlebar(window)
+    diag = os.environ.get("CHEESEMAX_DIAG")
+    if diag:
+        _start_diagnostics(window, diag)
     webview.start(debug=os.environ.get("CHEESEMAX_DEBUG") == "1", private_mode=False)
 
 
