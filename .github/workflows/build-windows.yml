@@ -2,6 +2,8 @@ name: Build Windows exe
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: windows-latest
@@ -19,6 +21,16 @@ jobs:
         with:
           name: Glide-windows
           path: dist/Glide.exe
+
+      - name: Publish to Releases
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $notes = "Latest build of Glide for Windows (commit ${{ github.sha }}). Download Glide.exe below and double-click it."
+          gh release delete latest --yes --cleanup-tag 2>$null
+          gh release create latest dist/Glide.exe --title "Glide for Windows (latest)" --notes $notes --target ${{ github.sha }}
 
       # ---- Smoke tests on the packaged exe ----
       - name: Self-test real downloads
