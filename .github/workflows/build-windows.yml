@@ -41,7 +41,7 @@ jobs:
           $p = Start-Process dist\Glide.exe -PassThru -Wait -ArgumentList @(
             '--selftest', "$PWD\test-out\report.json", "$PWD\test-out",
             'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-            'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4')
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4')
           Get-Content test-out\report.json
           Get-ChildItem test-out | Format-Table Name, Length
           exit $p.ExitCode

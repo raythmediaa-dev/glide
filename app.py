@@ -264,7 +264,17 @@ def selftest(out_file, folder, urls):
             results.append({"url": url, "preset": preset, "ok": ok and bool(path) and os.path.exists(path),
                             "path": path, "size": os.path.getsize(path) if path and os.path.exists(path) else 0,
                             "progress_events": sum('"progress"' in e for e in events), "last_event": last[:400]})
-    report = {"yt_dlp": yt_dlp.version.__version__, "results": results}
+    import shutil
+    tools = {}
+    for tool in ("ffmpeg", "ffprobe", "deno"):
+        exe = shutil.which(tool)
+        try:
+            out = subprocess.run([exe, "-version" if tool != "deno" else "--version"], capture_output=True,
+                                 text=True, timeout=30).stdout.splitlines()[0] if exe else None
+        except Exception as e:
+            out = f"failed: {e}"
+        tools[tool] = {"path": exe, "version": out}
+    report = {"yt_dlp": yt_dlp.version.__version__, "tools": tools, "results": results}
     Path(out_file).write_text(json.dumps(report, indent=2))
     sys.exit(0 if any(r["ok"] for r in results) else 1)
 
