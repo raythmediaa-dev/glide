@@ -115,6 +115,23 @@
     transition: left .28s var(--ease), width .28s var(--ease);
   }
   .seg-sep { width: 1px; height: 16px; background: var(--stroke-hi); margin: 0 4px; align-self: center; }
+  .select {
+    position: relative; display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 26px 0 10px;
+    border-radius: 8px; background: rgba(0,0,0,.3); border: 1px solid var(--stroke); color: var(--text-2);
+    transition: border-color .2s, color .2s;
+  }
+  .select:hover { border-color: var(--stroke-hi); color: var(--text); }
+  .select::after {
+    content: ""; position: absolute; right: 10px; top: 10px; width: 5px; height: 5px;
+    border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); opacity: .7;
+  }
+  .select svg { width: 13px; height: 13px; flex: none; }
+  .select select {
+    appearance: none; -webkit-appearance: none; background: none; border: 0; outline: 0; color: inherit;
+    font: inherit; font-size: 12.5px; position: absolute; inset: 0; padding: 0 26px 0 29px;
+  }
+  .select select option { background: #232326; color: var(--text); }
+  .select .sizer { visibility: hidden; font-size: 12.5px; white-space: pre; }
   .toggle { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 12.5px; }
   .switch {
     width: 32px; height: 19px; border-radius: 99px; background: rgba(255,255,255,.14); position: relative;
@@ -292,6 +309,17 @@
         <button data-v="m4a">M4A</button>
       </div>
       <div class="spacer"></div>
+      <label class="select" title="Use your browser's login if a site asks you to sign in">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        <span class="sizer" id="cookiesSizer">Login: Firefox</span>
+        <select id="cookies">
+          <option value="">Login: Off</option>
+          <option value="firefox">Login: Firefox</option>
+          <option value="chrome">Login: Chrome</option>
+          <option value="edge">Login: Edge</option>
+          <option value="brave">Login: Brave</option>
+        </select>
+      </label>
       <div class="toggle" data-key="subs"><div class="switch"></div>Subtitles</div>
       <div class="toggle" data-key="playlist"><div class="switch"></div>Full playlist</div>
     </div>
@@ -361,6 +389,10 @@ document.querySelectorAll('.toggle').forEach(t => t.addEventListener('click', ()
   t.classList.toggle('on'); api().set_setting(t.dataset.key, t.classList.contains('on'));
   if (t.dataset.key === 'playlist' && state.infoUrl) { state.infoUrl = null; maybeFetch(); }
 }));
+
+const cookiesEl = $('#cookies');
+const syncCookies = () => { $('#cookiesSizer').textContent = cookiesEl.options[cookiesEl.selectedIndex].text; $('.select').style.color = cookiesEl.value ? 'var(--text)' : ''; };
+cookiesEl.addEventListener('change', () => { syncCookies(); api().set_setting('cookies', cookiesEl.value); state.infoUrl = null; maybeFetch(); });
 
 /* ---------- folder ---------- */
 const showFolder = p => { $('#folderName').textContent = p.split(/[\\/]/).filter(Boolean).pop() || p; $('#folderBtn').title = p; };
@@ -483,6 +515,7 @@ window.addEventListener('pywebviewready', async () => {
   const s = await api().get_settings();
   IS_WIN = s.platform === 'win32';
   if (IS_WIN) $('#enterKey').textContent = 'Enter';
+  cookiesEl.value = s.cookies || ''; syncCookies();
   $('#version').textContent = 'yt-dlp ' + s.version;
   showFolder(s.folder);
   setPreset(s.preset || 'best', false);

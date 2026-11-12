@@ -42,7 +42,7 @@ rem ---- 4. Package -----------------------------------------------------------
 echo [4/4] Packaging with PyInstaller (this takes a minute)...
 ".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean --onefile --windowed ^
   --name Glide --icon glide.ico ^
-  --add-data "ui.html;." --add-binary "build\bin\*;bin" ^
+  --add-data "ui.html;." --add-data "build\bin\*;bin" ^
   --collect-all webview --collect-all yt_dlp_ejs ^
   app.py || goto :fail
 

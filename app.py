@@ -59,7 +59,7 @@ class Api:
     def __init__(self):
         self.window = None
         self._cancel = {}
-        self.settings = {"folder": str(Path.home() / "Downloads"), "preset": "best", "subs": False, "playlist": False}
+        self.settings = {"folder": str(Path.home() / "Downloads"), "preset": "best", "subs": False, "playlist": False, "cookies": ""}
         try:
             self.settings.update(json.loads(SETTINGS_FILE.read_text()))
         except Exception:
@@ -69,6 +69,11 @@ class Api:
     def _emit(self, event, payload):
         if self.window:
             self.window.evaluate_js(f"window.onBackend({json.dumps(event)}, {json.dumps(payload)})")
+
+    def _add_cookies(self, opts):
+        browser = self.settings.get("cookies")
+        if browser:
+            opts["cookiesfrombrowser"] = (browser,)
 
     def _save(self):
         try:
@@ -97,6 +102,7 @@ class Api:
     def fetch_info(self, url):
         opts = {"quiet": True, "no_warnings": True, "skip_download": True, "logger": _QuietLogger(),
                 "extract_flat": "in_playlist", "noplaylist": not self.settings.get("playlist")}
+        self._add_cookies(opts)
         try:
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -184,6 +190,7 @@ class Api:
             else:
                 opts.setdefault("postprocessors", []).append({"key": "FFmpegEmbedSubtitle"})
 
+        self._add_cookies(opts)
         try:
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=True)
@@ -209,6 +216,12 @@ def _clean_err(e):
     for prefix in ("ERROR: ", "\x1b[0;31mERROR:\x1b[0m "):
         msg = msg.replace(prefix, "")
     msg = msg.split("; please report this issue")[0]
+    if "confirm you" in msg and "not a bot" in msg:
+        return "YouTube wants you signed in. Set \"Login\" to the browser you use YouTube in, then retry."
+    if "could not copy" in msg.lower() and "cookie" in msg.lower():
+        return "Couldn't read that browser's login while it's open. Close the browser and retry, or pick Firefox."
+    if "decrypt" in msg.lower() and "cookie" in msg.lower():
+        return "This browser locks its cookies on Windows. Try Firefox for the Login option."
     return msg.strip()[:300]
 
 
